@@ -1,13 +1,13 @@
 # Define the output binaries
-CLI_BIN = csv-processor-cli
-WEB_BIN = csv-processor-web
+CLI_BIN = bin/csv-processor-cli
+WEB_BIN = bin/csv-processor-web
 
 # Define the source directories
 CLI_SRC = ./cmd
 WEB_SRC = ./web
 
 # Default target: build both binaries
-all:  $(CLI_BIN) $(WEB_BIN) docker snyk
+all:  $(CLI_BIN) $(WEB_BIN) docker
 
 # Build the CLI binary
 $(CLI_BIN):
@@ -19,8 +19,6 @@ $(WEB_BIN):
 	go build -o $(WEB_BIN) $(WEB_SRC)/main.go
 	chmod 755  $(WEB_BIN)
 
-snyk:
-	# snyk test --file=go.mod
 
 # Build the docker image
 docker:

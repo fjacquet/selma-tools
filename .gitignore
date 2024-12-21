@@ -25,5 +25,4 @@ go.work.sum
 .env
 downloads/
 uploads/
-csv-processor-cli
-csv-processor-web
+bin/
