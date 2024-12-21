@@ -1,3 +1,16 @@
+# Selma tools
+
+## CSV converter
+
+Selma is great but they split on 2 lines the operation and its costs.
+First tools is simply to combine the lines in one to import this in iCompta for example
+
+- To run cli : make run-cli
+- To run web ui : make run-web
+- To get a docker : make run-docker
+
+## About
+
 ### Github
 
 You should already know my Github if you read this :)
@@ -9,7 +22,3 @@ You should already know my Github if you read this :)
 ### Snyk status
 
 [![Known Vulnerabilities](https://snyk.io/test/github/fjacquet/selma-tools/badge.svg)](https://snyk.io/test/github/fjacquet/selma-tools)
-
-- To run cli : make run-cli
-- To run web ui : make run-web
-- To get a docker : make run-docker

@@ -19,7 +19,7 @@ func TestExecute(t *testing.T) {
 
 	// Set up the command with test flags
 	rootCmd := createRootCmd(&origFile, &cleanFile)
-	rootCmd.SetArgs([]string{"--input", "testdata/input.csv", "--output", "testdata/output.csv"})
+	rootCmd.SetArgs([]string{"--input", "../testdata/input.csv", "--output", "../testdata/output.csv"})
 
 	// Execute the command
 	err := rootCmd.Execute()
