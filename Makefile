@@ -7,7 +7,7 @@ CLI_SRC = ./cmd
 WEB_SRC = ./web
 
 # Default target: build both binaries
-all: $(CLI_BIN) $(WEB_BIN) docker
+all: clean test $(CLI_BIN) $(WEB_BIN) docker
 
 test:
 	go test ./cmd/
