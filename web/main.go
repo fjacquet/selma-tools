@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/fjacquet/selma-tools/internal/csvprocessor"
 	"github.com/fjacquet/selma-tools/internal/logger"
@@ -87,13 +86,13 @@ func uploadHandler(c *gin.Context) {
 	processedRecords := csvprocessor.ProcessRecords(records)
 
 	// Save the processed records to a new CSV file
-	outputFileName := fmt.Sprintf("processed_%d.csv", time.Now().Unix())
-	outputFilePath := filepath.Join("downloads", outputFileName)
-	if err := csvprocessor.WriteCSV(outputFilePath, processedRecords); err != nil {
-		logrus.Errorf("Failed to write CSV: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to write CSV"})
-		return
-	}
+	// outputFileName := fmt.Sprintf("processed_%d.csv", time.Now().Unix())
+	// outputFilePath := filepath.Join("downloads", outputFileName)
+	// if err := csvprocessor.WriteCSV(outputFilePath, processedRecords); err != nil {
+	// 	logrus.Errorf("Failed to write CSV: %v", err)
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to write CSV"})
+	// 	return
+	// }
 
 	// Stream the processed CSV file back to the user
 	c.Header("Content-Disposition", "attachment; filename=processed.csv")
@@ -132,8 +131,8 @@ func uploadHandler(c *gin.Context) {
 
 	logrus.Info("Processed file successfully streamed to client")
 
-	logrus.Infof("File processed successfully: %s", outputFileName)
-	c.JSON(http.StatusOK, gin.H{"message": "File processed successfully", "download": "/download/" + outputFileName})
+	// logrus.Infof("File processed successfully: %s", outputFileName)
+	c.JSON(http.StatusOK, gin.H{"message": "File processed successfully"})
 }
 
 func downloadHandler(c *gin.Context) {

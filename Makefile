@@ -22,7 +22,7 @@ $(WEB_BIN):
 
 # Build the docker image
 docker:
-	docker rmi csv-processor-web
+	# docker rmi csv-processor-web
 	docker build -t csv-processor-web .
 
 # Clean up build artifacts
