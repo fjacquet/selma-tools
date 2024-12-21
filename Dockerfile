@@ -24,10 +24,7 @@ RUN go build -o /app/web
 # Stage 2: Create a minimal image for running the application
 FROM alpine:latest
 # Install dependencies
-RUN apk --no-cache add ca-certificates
-
-# install sudo as root
-RUN apk add --update sudo
+RUN apk --no-cache add ca-certificates && apk add --no-cach --update sudo
 
 # Set working directory
 WORKDIR /app
