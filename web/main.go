@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
-	"github.com/fjacquet/selma-cli/internal/csvprocessor"
-	"github.com/fjacquet/selma-cli/internal/logger"
+	"github.com/fjacquet/selma-tools/internal/csvprocessor"
+	"github.com/fjacquet/selma-tools/internal/logger"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -48,9 +50,26 @@ func uploadHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to upload file"})
 		return
 	}
+	// Base directory for uploads
+	baseDir := "uploads"
+
+	// Sanitize the file name
+	filename := filepath.Base(file.Filename)
+
+	// Construct the full path for the saved file
+	origFilePath := filepath.Join(baseDir, filename)
+
+	// Clean the path to prevent directory traversal
+	origFilePath = filepath.Clean(origFilePath)
+
+	// Ensure the resolved path starts with the base directory
+	if !strings.HasPrefix(origFilePath, baseDir) {
+		logrus.Errorf("Invalid file path: %s", origFilePath)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file name"})
+		return
+	}
 
 	// Save the uploaded file
-	origFilePath := filepath.Join("uploads", file.Filename)
 	if err := c.SaveUploadedFile(file, origFilePath); err != nil {
 		logrus.Errorf("Failed to save file: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
@@ -119,7 +138,20 @@ func uploadHandler(c *gin.Context) {
 
 func downloadHandler(c *gin.Context) {
 	filename := c.Param("filename")
-	filePath := filepath.Join("downloads", filename)
+
+	// Base directory where downloads are stored
+	baseDir := "downloads"
+	// Resolve the full path to ensure it stays within the base directory
+	filePath := filepath.Join(baseDir, filename)
+
+	// Clean the path to remove any ../ sequences
+	filePath = filepath.Clean(filePath)
+
+	// Ensure the resolved path starts with the base directory
+	if !strings.HasPrefix(filePath, baseDir) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file path"})
+		return
+	}
 
 	// Check if the file exists
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {

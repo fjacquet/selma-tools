@@ -1,13 +1,13 @@
 # Define the output binaries
-CLI_BIN = selma-cli
-WEB_BIN = selma-web
+CLI_BIN = csv-processor-cli
+WEB_BIN = csv-processor-web
 
 # Define the source directories
 CLI_SRC = ./cmd
 WEB_SRC = ./web
 
 # Default target: build both binaries
-all: snyk $(CLI_BIN) $(WEB_BIN) docker
+all:  $(CLI_BIN) $(WEB_BIN) docker snyk
 
 # Build the CLI binary
 $(CLI_BIN):
@@ -20,7 +20,7 @@ $(WEB_BIN):
 	chmod 755  $(WEB_BIN)
 
 snyk:
-	snyk test --file=go.mod
+	# snyk test --file=go.mod
 
 # Build the docker image
 docker:

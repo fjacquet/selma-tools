@@ -1,4 +1,4 @@
-module github.com/fjacquet/selma
+module github.com/fjacquet/selma-tools
 
 go 1.23.4
 

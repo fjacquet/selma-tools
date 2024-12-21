@@ -1,5 +1,5 @@
 # Stage 1: Build the Go application
-FROM golang:1.23 AS builder
+FROM golang:latest AS builder
 
 # Set environment variables
 ENV GO111MODULE=on \
@@ -22,7 +22,7 @@ WORKDIR /app/web
 RUN go build -o /app/web
 
 # Stage 2: Create a minimal image for running the application
-FROM alpine:3.18
+FROM alpine:latest
 
 # Install dependencies
 RUN apk --no-cache add ca-certificates
