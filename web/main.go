@@ -49,34 +49,54 @@ func uploadHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to upload file"})
 		return
 	}
+
 	// Base directory for uploads
 	baseDir := "uploads"
 
-	// Sanitize the file name
+	// Ensure the upload directory exists
+	if err := os.MkdirAll(baseDir, 0o700); err != nil {
+		logrus.Errorf("Failed to create upload directory: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Server error"})
+		return
+	}
+
+	// Only keep the file's base name (drop any provided path)
 	filename := filepath.Base(file.Filename)
-
-	// Construct the full path for the saved file
-	origFilePath := filepath.Join(baseDir, filename)
-
-	// Clean the path to prevent directory traversal
-	origFilePath = filepath.Clean(origFilePath)
-
-	// Ensure the resolved path starts with the base directory
-	if !strings.HasPrefix(origFilePath, baseDir) {
-		logrus.Errorf("Invalid file path: %s", origFilePath)
+	if filename == "." || filename == ".." || filename == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file name"})
 		return
 	}
 
+	// Build absolute, normalized paths and enforce containment
+	baseAbs, err := filepath.Abs(filepath.Clean(baseDir))
+	if err != nil {
+		logrus.Errorf("Failed to resolve base path: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Server error"})
+		return
+	}
+	target := filepath.Join(baseAbs, filename)
+	targetAbs, err := filepath.Abs(target)
+	if err != nil {
+		logrus.Errorf("Failed to resolve target path: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Server error"})
+		return
+	}
+	// Ensure target path stays within base directory
+	if targetAbs != baseAbs && !strings.HasPrefix(targetAbs+string(os.PathSeparator), baseAbs+string(os.PathSeparator)) && !strings.HasPrefix(targetAbs, baseAbs+string(os.PathSeparator)) {
+		logrus.Errorf("Path traversal attempt blocked: %s", targetAbs)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file path"})
+		return
+	}
+
 	// Save the uploaded file
-	if err := c.SaveUploadedFile(file, origFilePath); err != nil {
+	if err := c.SaveUploadedFile(file, targetAbs); err != nil {
 		logrus.Errorf("Failed to save file: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 		return
 	}
 
 	// Process the file
-	records, err := csvprocessor.ReadCSV(origFilePath)
+	records, err := csvprocessor.ReadCSV(targetAbs)
 	if err != nil {
 		logrus.Errorf("Failed to read CSV: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read CSV"})
@@ -136,27 +156,46 @@ func uploadHandler(c *gin.Context) {
 }
 
 func downloadHandler(c *gin.Context) {
-	filename := c.Param("filename")
+	// Only accept the base name of the requested file
+	filename := filepath.Base(c.Param("filename"))
+	if filename == "." || filename == ".." || filename == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file name"})
+		return
+	}
 
 	// Base directory where downloads are stored
 	baseDir := "downloads"
-	// Resolve the full path to ensure it stays within the base directory
-	filePath := filepath.Join(baseDir, filename)
+	// Ensure the downloads directory exists
+	if err := os.MkdirAll(baseDir, 0o700); err != nil {
+		logrus.Errorf("Failed to create downloads directory: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Server error"})
+		return
+	}
 
-	// Clean the path to remove any ../ sequences
-	filePath = filepath.Clean(filePath)
-
-	// Ensure the resolved path starts with the base directory
-	if !strings.HasPrefix(filePath, baseDir) {
+	// Resolve to absolute paths and enforce containment
+	baseAbs, err := filepath.Abs(filepath.Clean(baseDir))
+	if err != nil {
+		logrus.Errorf("Failed to resolve base path: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Server error"})
+		return
+	}
+	target := filepath.Join(baseAbs, filename)
+	targetAbs, err := filepath.Abs(target)
+	if err != nil {
+		logrus.Errorf("Failed to resolve target path: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Server error"})
+		return
+	}
+	if targetAbs != baseAbs && !strings.HasPrefix(targetAbs+string(os.PathSeparator), baseAbs+string(os.PathSeparator)) && !strings.HasPrefix(targetAbs, baseAbs+string(os.PathSeparator)) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file path"})
 		return
 	}
 
 	// Check if the file exists
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+	if _, err := os.Stat(targetAbs); os.IsNotExist(err) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
 		return
 	}
 
-	c.File(filePath)
+	c.File(targetAbs)
 }
